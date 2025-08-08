@@ -453,6 +453,76 @@
     navigator.clipboard.writeText(lines.join('\n')).then(()=>alert('Resumen copiado.'));
   });
 
+  
+  function buildSummary() {
+    const get = k => Math.max(0, parseInt(localStorage.getItem(k)||'0',10) || 0);
+    const total = get('proc_atendidos') + get('proc_trasladados');
+    const titulo = (localStorage.getItem('titulo_text')||'').trim();
+    const direccion = (localStorage.getItem('direccion_text')||'').trim();
+    const notas = (localStorage.getItem('notas_text')||'').trim();
+
+    const lines = [
+      `Incidente: ${titulo}`,
+      `Dirección: ${direccion}`,
+      ``,
+      `Hasta ahora ${total} pacientes`,
+      ``,
+      `Sexo:`,
+      `* ${get('sexo_f')} Femeninos.`,
+      `* ${get('sexo_m')} Masculinos.`,
+      `* ${get('sexo_sd')} S/D`,
+      ``,
+      `Edad:`,
+      `* ${get('edad_menores')} Menores`,
+      `* ${get('edad_mayores')} Mayores`,
+      `* ${get('edad_sd')} S/D`,
+      ``,
+      `Procedimiento`,
+      `* ${get('proc_atendidos')} Atendidos en el lugar:`,
+      `* ${get('proc_trasladados')} trasladados`,
+      ``,
+      `Dotación:`,
+      `* ${get('dot_moviles')} Móviles`,
+      `* ${get('dot_aereo')} Aéreo`,
+      ``,
+      `Notas:`,
+      notas
+    ];
+    return lines.join('\n');
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        alert('Resumen copiado.');
+        return;
+      }
+      throw new Error('Clipboard API not available');
+    } catch (e) {
+      // Fallback antiguo para iOS/Safari
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) {
+          alert('Resumen copiado.');
+        } else {
+          alert('No se pudo copiar. Mantén presionado y selecciona "Copiar".');
+        }
+      } catch (err) {
+        document.body.removeChild(ta);
+        alert('No se pudo copiar. Mantén presionado y selecciona "Copiar".');
+      }
+    }
+  }
+
   // Init
   load();
 })();
